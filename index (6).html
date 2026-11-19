@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1A0B2E">
+<title>Josep’s Day Off 🎮</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌴</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --night: #1A0B2E;
+    --night-2: #2B1048;
+    --pink: #FF3D7F;
+    --orange: #FF9A3C;
+    --sun: #FFD166;
+    --teal: #2EE6D6;
+    --text: #FDF2FF;
+    --muted: #C7B3D9;
+    --card: rgba(255,255,255,.06);
+    --line: rgba(255,255,255,.14);
+    color-scheme: dark;
+    box-sizing: border-box;
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--text);
+    background: var(--night);
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .display { font-family: "Anton", Impact, "Arial Narrow", sans-serif; font-weight: 400; letter-spacing: .01em; }
+  button { font: inherit; color: inherit; }
+  button:focus-visible, input:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
+
+  /* ---------- Sunset scene (shared) ---------- */
+  .scene {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(180deg, var(--night) 0%, var(--night-2) 38%, #7A1E5C 62%, var(--pink) 78%, var(--orange) 100%);
+  }
+  .sun {
+    position: absolute;
+    left: 50%;
+    bottom: -8%;
+    width: min(70vw, 420px);
+    aspect-ratio: 1;
+    transform: translateX(-50%);
+    border-radius: 50%;
+    background: linear-gradient(180deg, var(--sun), var(--orange) 55%, var(--pink));
+    -webkit-mask: linear-gradient(#000 50%, #0000 50% 54%, #000 54% 63%, #0000 63% 68%, #000 68% 76%, #0000 76% 82%, #000 82%);
+            mask: linear-gradient(#000 50%, #0000 50% 54%, #000 54% 63%, #0000 63% 68%, #000 68% 76%, #0000 76% 82%, #000 82%);
+    opacity: .95;
+  }
+  .palm { position: absolute; bottom: -4px; fill: #12061F; }
+  .palm.l { left: -18px; width: min(42vw, 230px); }
+  .palm.r { right: -24px; width: min(36vw, 200px); transform: scaleX(-1); }
+
+  /* ---------- Loading screen ---------- */
+  #loading {
+    position: fixed; inset: 0; z-index: 50;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 1.5rem 1.5rem 2rem; overflow-y: auto;
+    text-align: center;
+    transition: opacity .6s ease, visibility .6s;
+  }
+  #loading.gone { opacity: 0; visibility: hidden; }
+  #loading .eyebrow { font-weight: 700; color: var(--teal); letter-spacing: .12em; font-size: .85rem; margin: 0 0 .6rem; position: relative; }
+  #loading h1 {
+    position: relative;
+    font-size: clamp(2.8rem, 13vw, 5.5rem);
+    line-height: .9;
+    margin: 0 0 1.4rem;
+    color: var(--text);
+    text-shadow: 3px 3px 0 var(--pink), 6px 6px 0 rgba(0,0,0,.35);
+  }
+  .bar { position: relative; width: min(80vw, 340px); height: 10px; border-radius: 99px; background: rgba(0,0,0,.35); overflow: hidden; border: 1px solid var(--line); }
+  .bar i { position: absolute; inset: 0; width: 0; background: linear-gradient(90deg, var(--teal), var(--sun)); border-radius: 99px; }
+  .tip { position: relative; min-height: 3em; max-width: 30ch; margin: 1rem auto 0; color: var(--text); font-weight: 500; line-height: 1.45; }
+  .start {
+    position: relative;
+    margin-top: 1.2rem;
+    padding: .9rem 2.2rem;
+    border: 0; border-radius: 999px;
+    background: var(--text); color: var(--night);
+    font-weight: 800; letter-spacing: .06em;
+    cursor: pointer;
+    opacity: 0; transform: translateY(8px);
+    transition: opacity .4s, transform .4s;
+    pointer-events: none;
+    box-shadow: 0 0 0 6px rgba(255,255,255,.15);
+  }
+  .start.ready { opacity: 1; transform: none; pointer-events: auto; animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 12px rgba(255,255,255,.05); } }
+
+
+  /* ---------- Cartoon ---------- */
+  .art { position: relative; width: min(88vw, 360px); margin: -.4rem auto 1.2rem; }
+  .art .duo { display: block; width: 100%; height: auto; max-height: 44vh; margin: 0 auto; filter: drop-shadow(5px 5px 0 rgba(26,11,46,.55)); animation: bob 3s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translateY(-4px); } }
+  .tag { position: absolute; font-size: .95rem; letter-spacing: .06em; padding: .25rem .6rem; border: 2.5px solid #1A0B2E; border-radius: 6px; box-shadow: 3px 3px 0 #1A0B2E; }
+  .tag.t1 { left: -2%; bottom: 30%; background: var(--sun); color: #1A0B2E; transform: rotate(-8deg); }
+  .tag.t3 { right: 0; bottom: -5%; font-size: .75rem; background: #7CFF9B; color: #1A0B2E; transform: rotate(-5deg); }
+  .tag.t2 { right: 14%; bottom: 54%; background: var(--teal); color: #1A0B2E; transform: rotate(7deg); }
+
+  .hero-art { width: min(84vw, 340px); margin: 1.4rem auto 0; }
+  .hero-art .duo { max-height: none; }
+
+  /* ---------- HUD ---------- */
+  .hud {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; justify-content: space-between; align-items: center; gap: .75rem;
+    padding: calc(.7rem + env(safe-area-inset-top, 0px)) 1rem .7rem;
+    background: rgba(26,11,46,.82);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .hud { flex-wrap: wrap; }
+  .countdown { flex-basis: 100%; display: flex; justify-content: space-between; align-items: center; gap: .6rem; margin-top: .55rem; padding: .45rem .75rem; border-radius: 10px; background: rgba(255,61,127,.14); border: 1px solid rgba(255,61,127,.45); }
+  .cd-label { font-size: .7rem; line-height: 1.25; font-weight: 800; letter-spacing: .05em; color: var(--pink); }
+  .cd-time { white-space: nowrap; flex: none; font-size: 1.25rem; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; }
+  .countdown.home { background: rgba(124,255,155,.14); border-color: rgba(124,255,155,.5); }
+  .countdown.home .cd-label { color: #7CFF9B; }
+  #passed.failed .big { color: #FF4D5E; }
+  #passed.failed .sub { color: var(--text); }
+  .hud .left { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: .3rem; min-width: 0; }
+  .hud .stars { display: flex; gap: 3px; font-size: 1.05rem; color: rgba(255,255,255,.22); }
+  .hud .stars i { font-style: normal; }
+  .hud .stars i.on { color: var(--sun); text-shadow: 0 0 8px rgba(255,209,102,.8); }
+  .hud .stars.hot i.on { animation: siren 1s steps(2, jump-none) infinite; }
+  @keyframes siren { 0% { color: var(--sun); } 100% { color: #FF4D5E; text-shadow: 0 0 8px rgba(255,77,94,.8); } }
+  .hud .stars-label.wanted { color: var(--pink); }
+  .mission.late:not(.done) .kicker::after { content: " · OVERDUE"; color: #FF4D5E; }
+  .mission.late:not(.done) { border-color: rgba(255,77,94,.55); }
+  .hud .stars-label { font-size: .72rem; color: var(--teal); font-weight: 700; letter-spacing: .04em; }
+  .hud .right { flex: none; text-align: right; }
+  .hud .clock { font-size: 1.5rem; line-height: 1; }
+  .hud .cash { font-size: 1.15rem; line-height: 1.1; color: #7CFF9B; }
+
+  /* ---------- Hero ---------- */
+  .hero { min-height: 300px; padding: 2.4rem 1.25rem 7.6rem; text-align: center; }
+  .hero h2 { position: relative; font-size: clamp(2.6rem, 11vw, 4.6rem); line-height: .92; margin: 0; text-shadow: 3px 3px 0 var(--pink); }
+  .hero p { position: relative; margin: .8rem auto 0; max-width: 30ch; color: var(--text); font-weight: 500; line-height: 1.45; }
+
+  main { width: min(100%, 560px); margin: 0 auto; padding: 0 1rem 3rem; }
+  section { margin-top: 2.2rem; }
+  .label { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin: 0 0 .8rem; }
+  .label h3 { font-size: 1.6rem; margin: 0; letter-spacing: .02em; }
+  .label span { color: var(--muted); font-size: .9rem; font-weight: 500; }
+
+  /* ---------- Phone thread ---------- */
+  .phone {
+    margin-top: -6.5rem; position: relative; z-index: 2;
+    background: #120720;
+    border: 1px solid var(--line);
+    border-radius: 26px;
+    padding: .8rem;
+    box-shadow: 0 20px 50px rgba(0,0,0,.45);
+  }
+  .phone .top { display: flex; align-items: center; gap: .65rem; padding: .3rem .4rem .8rem; border-bottom: 1px solid var(--line); }
+  .phone .avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; flex: none; border: 2px solid var(--pink); background: var(--night-2); }
+  .phone .who { font-weight: 800; }
+  .phone .status { font-size: .78rem; color: var(--teal); }
+  .thread { display: flex; flex-direction: column; gap: .45rem; padding: .9rem .3rem .4rem; min-height: 120px; }
+  .msg {
+    align-self: flex-start;
+    max-width: 82%;
+    background: #2A1742;
+    padding: .6rem .85rem;
+    border-radius: 18px 18px 18px 6px;
+    line-height: 1.4;
+    animation: in .35s ease-out both;
+  }
+  .typing { display: inline-flex; gap: 4px; padding: .75rem .9rem; }
+  .typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: blink 1s infinite; }
+  .typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
+  @keyframes blink { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
+  @keyframes in { from { opacity: 0; transform: translateY(6px) scale(.97); } to { opacity: 1; transform: none; } }
+
+  /* ---------- Missions ---------- */
+  .missions { display: grid; gap: .9rem; }
+  .mission {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 1.1rem 1.1rem 1.1rem;
+    overflow: hidden;
+  }
+  .mission::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--accent); }
+  .mission .head { display: flex; gap: .85rem; align-items: center; }
+  .mission .icon svg { width: 40px; height: 40px; display: block; }
+  .mission .icon { width: 52px; height: 52px; flex: none; border-radius: 14px; display: grid; place-items: center; font-size: 1.7rem; background: color-mix(in srgb, var(--accent) 22%, transparent); }
+  .mission .kicker { font-size: .78rem; font-weight: 700; color: var(--accent); letter-spacing: .05em; }
+  .mission h4 { font-family: "Anton", Impact, sans-serif; font-weight: 400; font-size: 1.55rem; line-height: 1.05; margin: .15rem 0 0; }
+  .mission .brief { margin: .85rem 0 0; line-height: 1.5; color: var(--text); }
+  .mission .meta { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .75rem; }
+  .chip { font-size: .8rem; font-weight: 700; padding: .3rem .65rem; border-radius: 99px; background: rgba(255,255,255,.08); color: var(--muted); }
+  .mission .go {
+    margin-top: 1rem; width: 100%;
+    padding: .8rem 1rem; border: 0; border-radius: 14px;
+    background: var(--accent); color: #1A0B2E;
+    font-weight: 800; letter-spacing: .03em; cursor: pointer;
+  }
+  .mission.done { opacity: .72; }
+  .secret { background: linear-gradient(135deg, rgba(255,209,102,.12), rgba(255,61,127,.08)); }
+  .riddle { margin: .7rem 0 0; padding: .7rem .9rem; border-left: 3px solid var(--sun); background: rgba(0,0,0,.2); border-radius: 0 10px 10px 0; font-style: italic; font-weight: 500; line-height: 1.45; }
+  .mission .brief.small { font-size: .9rem; color: var(--muted); margin-top: .6rem; }
+  .secret .icon { animation: glint 2.4s ease-in-out infinite; }
+  .secret.done .icon { animation: none; }
+  @keyframes glint { 50% { transform: rotate(-6deg) scale(1.06); } }
+  .coop { background: rgba(124,255,155,.07); }
+  .patrols { list-style: none; margin: .9rem 0 0; padding: 0; display: grid; gap: .45rem; }
+  .patrol { display: flex; align-items: center; gap: .6rem; padding: .55rem .75rem; border-radius: 12px; background: rgba(255,255,255,.06); }
+  .patrol .pdot { width: 26px; height: 26px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: .85rem; border: 2px solid #7CFF9B; }
+  .patrol.done .pdot { background: #7CFF9B; color: #1A0B2E; font-weight: 800; }
+  .patrol .pt { flex: 1; font-weight: 500; }
+  .patrol .ps { font-size: .8rem; font-weight: 700; color: var(--muted); }
+  .patrol.done .ps { color: #7CFF9B; }
+  .coop .stamp { display: inline-block; margin: 0 0 .8rem; font-size: .95rem; letter-spacing: .05em; color: #7CFF9B; border: 2.5px solid #7CFF9B; border-radius: 6px; padding: .15rem .5rem; transform: rotate(-3deg); }
+  .mission.done .go { background: transparent; color: var(--accent); border: 1.5px dashed var(--accent); }
+  .mission.done h4 { text-decoration: line-through; text-decoration-thickness: 2px; }
+
+  /* ---------- Side missions ---------- */
+  .sides { display: grid; gap: .5rem; }
+  .side {
+    display: flex; align-items: center; gap: .8rem;
+    padding: .8rem 1rem;
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    cursor: pointer; text-align: left; width: 100%;
+  }
+  .side .box { width: 24px; height: 24px; flex: none; border-radius: 7px; border: 2px solid var(--teal); display: grid; place-items: center; font-size: .9rem; color: var(--night); }
+  .side[aria-pressed="true"] .box { background: var(--teal); }
+  .side[aria-pressed="true"] .txt { opacity: .6; text-decoration: line-through; }
+  .side .txt { flex: 1; line-height: 1.35; }
+
+  /* ---------- Progress ---------- */
+  .progress { display: flex; align-items: center; gap: .8rem; }
+  .progress .track { flex: 1; height: 10px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; }
+  .progress .fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--teal), var(--sun), var(--pink)); transition: width .6s ease; }
+  .progress .pct { font-size: 1.4rem; min-width: 3.2ch; text-align: right; }
+
+  /* ---------- Cheats ---------- */
+  .cheat { display: flex; gap: .5rem; }
+  .cheat input {
+    flex: 1; min-width: 0;
+    background: #120720; color: var(--text);
+    border: 1px solid var(--line); border-radius: 12px;
+    padding: .8rem .9rem; font: 700 1rem "Manrope", sans-serif; letter-spacing: .12em; text-transform: uppercase;
+  }
+  .cheat button { border: 0; border-radius: 12px; padding: 0 1.1rem; background: var(--text); color: var(--night); font-weight: 800; cursor: pointer; }
+  .cheat-out { min-height: 1.4em; margin: .7rem 0 0; color: var(--muted); line-height: 1.45; }
+  .voucher { display: none; margin-top: .9rem; padding: 1rem 1.1rem; border-radius: 16px; border: 2px dashed var(--sun); background: rgba(255,209,102,.1); }
+  .voucher.show { display: block; animation: in .5s ease-out both; }
+  .v-k { font-size: .72rem; font-weight: 800; letter-spacing: .06em; color: var(--sun); }
+  .v-t { font-size: 1.5rem; line-height: 1.1; margin: .25rem 0 .35rem; }
+  .v-s { color: var(--muted); line-height: 1.4; font-size: .92rem; }
+  .cheat-out.win { color: var(--sun); font-weight: 700; }
+
+  .finale {
+    display: none;
+    margin-top: 2.2rem; padding: 1.4rem;
+    border-radius: 20px; text-align: center;
+    background: linear-gradient(135deg, var(--pink), var(--orange));
+    color: #1A0B2E;
+  }
+  .prize-locked { display: flex; align-items: center; gap: .8rem; margin-top: 1rem; padding: .9rem 1rem; border-radius: 16px; border: 1.5px dashed var(--line); background: rgba(255,255,255,.04); }
+  .prize-locked .lock { font-size: 1.6rem; }
+  .pl-k { font-size: .75rem; font-weight: 800; letter-spacing: .06em; color: var(--sun); }
+  .pl-t { color: var(--muted); font-weight: 500; }
+  .prize-emoji { font-size: 2.6rem; margin: .2rem 0; }
+  .finale .prize-name { font-size: 1.5rem; margin: 0 0 .5rem; letter-spacing: .02em; }
+  .finale.show { display: block; animation: in .5s ease-out both; }
+  .finale h3 { font-size: 2.2rem; margin: 0 0 .3rem; }
+  .finale p { margin: 0; font-weight: 700; line-height: 1.45; }
+
+  footer { text-align: center; color: var(--muted); padding: 1rem 1rem calc(2rem + env(safe-area-inset-bottom, 0px)); font-size: .9rem; user-select: none; }
+
+  /* ---------- Mission passed overlay ---------- */
+  #passed {
+    position: fixed; inset: 0; z-index: 60;
+    display: grid; place-items: center; text-align: center;
+    background: radial-gradient(ellipse at center, rgba(26,11,46,.55), rgba(26,11,46,.92));
+    opacity: 0; visibility: hidden; transition: opacity .3s, visibility .3s;
+    cursor: pointer; padding: 1.5rem;
+  }
+  #passed.show { opacity: 1; visibility: visible; }
+  #passed .big {
+    font-size: clamp(3rem, 15vw, 6rem); line-height: .9; margin: 0;
+    color: var(--sun);
+    text-shadow: 3px 3px 0 var(--pink), 6px 6px 0 rgba(0,0,0,.4);
+  }
+  #passed.show .big { animation: slam .5s cubic-bezier(.2,1.5,.4,1) both; }
+  @keyframes slam { from { transform: scale(2.2); opacity: 0; } to { transform: none; opacity: 1; } }
+  #passed .sub { margin: 1rem 0 0; font-size: 1.4rem; color: #7CFF9B; }
+  #passed .note { margin: .5rem auto 0; max-width: 28ch; color: var(--text); font-weight: 500; line-height: 1.45; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .art .duo, .msg, .finale.show, .voucher.show, #passed.show .big, .start.ready { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LOADING ============ -->
+<div id="loading" class="scene" role="dialog" aria-label="Loading">
+  <div class="sun"></div>
+  <svg class="palm l" viewBox="0 0 200 300" aria-hidden="true"><path d="M96 300 C 100 230, 112 170, 118 112 L 126 112 C 122 170, 112 230, 112 300 Z"/><path d="M122 110 C 90 80, 40 82, 4 112 C 44 96, 84 98, 122 116 Z"/><path d="M122 110 C 100 66, 60 48, 18 54 C 62 66, 96 84, 120 116 Z"/><path d="M122 110 C 130 64, 160 38, 196 34 C 166 54, 142 80, 126 116 Z"/><path d="M122 110 C 160 92, 190 104, 200 136 C 178 116, 152 110, 124 116 Z"/><path d="M122 110 C 120 70, 104 36, 82 14 C 112 40, 126 74, 126 112 Z"/></svg>
+  <svg class="palm r" viewBox="0 0 200 300" aria-hidden="true"><path d="M96 300 C 100 230, 112 170, 118 112 L 126 112 C 122 170, 112 230, 112 300 Z"/><path d="M122 110 C 90 80, 40 82, 4 112 C 44 96, 84 98, 122 116 Z"/><path d="M122 110 C 100 66, 60 48, 18 54 C 62 66, 96 84, 120 116 Z"/><path d="M122 110 C 130 64, 160 38, 196 34 C 166 54, 142 80, 126 116 Z"/><path d="M122 110 C 160 92, 190 104, 200 136 C 178 116, 152 110, 124 116 Z"/></svg>
+
+  <p class="eyebrow">NOW LOADING</p>
+  <h1 class="display">JOSEP’S<br>DAY OFF</h1>
+  <div class="art">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="70 30 344 410" class="duo" role="img" aria-label="Cartoon of Josep in a brown cowboy hat, brown jacket over an olive sweater, and burgundy trousers with his arms crossed, next to Iya in a brown cowboy hat, denim shirt and white boots, with their Belgian Malinois Mike sitting beside her">
+<g stroke="#1A0B2E" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round">
+  <!-- ground shadow -->
+  <ellipse cx="230" cy="430" rx="150" ry="9" fill="#1A0B2E" opacity=".35" stroke="none"/>
+
+  <!-- ================= HER (behind-ish, right) ================= -->
+  <!-- hair back -->
+  <path d="M242 112 Q234 200 238 258 Q268 268 298 258 Q302 200 294 112 Z" fill="#15101A"/>
+  <!-- legs -->
+  <path d="M249 312 L250 356 H266 L266 312 Z" fill="#C68A5E"/>
+  <path d="M270 312 L272 356 H288 L289 312 Z" fill="#C68A5E"/>
+  <!-- boots -->
+  <path d="M247 346 Q258 341 268 346 L268 414 L272 428 H232 Q232 418 246 415 Z" fill="#F3EEE6"/>
+  <path d="M270 346 Q280 341 291 346 L292 414 Q306 418 306 428 H272 L270 414 Z" fill="#F3EEE6"/>
+  <path d="M252 360 Q258 372 262 360 M276 360 Q281 372 286 360" fill="none" stroke-width="2" stroke="#B8AE9F"/>
+  <path d="M259 350 L260 412 M281 350 L281 412" fill="none" stroke-width="2" stroke="#D4CCBF"/>
+  <!-- shorts -->
+  <path d="M243 272 H293 L295 318 H272 L268 300 L264 318 H241 Z" fill="#F6E7A1"/>
+  <path d="M243 318 l3 4 l3 -4 l3 4 l3 -4 l3 4 l3 -4 l3 4 M273 318 l3 4 l3 -4 l3 4 l3 -4 l3 4 l3 -4 l3 4" fill="none" stroke-width="2"/>
+  <!-- shirt -->
+  <path d="M238 182 Q268 172 298 182 L304 214 L296 216 L294 272 H242 L240 216 L232 214 Z" fill="#4F7DB8"/>
+  <path d="M296 216 L294 272 H278 Q290 240 296 216 Z" fill="#3B6396" stroke="none"/>
+  <path d="M258 180 L268 198 L278 180" fill="#C68A5E"/>
+  <path d="M268 198 V268" fill="none" stroke-width="2"/>
+  <circle cx="268" cy="214" r="1.8" fill="#1A0B2E" stroke="none"/>
+  <circle cx="268" cy="234" r="1.8" fill="#1A0B2E" stroke="none"/>
+  <circle cx="268" cy="254" r="1.8" fill="#1A0B2E" stroke="none"/>
+  <path d="M248 206 h12 v12 h-12 Z M276 206 h12 v12 h-12 Z" fill="none" stroke-width="2"/>
+  <!-- belt -->
+  <path d="M242 266 H294 V278 H242 Z" fill="#6B3E26"/>
+  <rect x="262" y="265" width="12" height="14" rx="2" fill="#E8C66A" stroke-width="2.5"/>
+  <!-- left arm (down) -->
+  <path d="M234 186 L222 250 L234 254 L244 208 Z" fill="#4F7DB8"/>
+  <circle cx="228" cy="259" r="7" fill="#C68A5E"/>
+  <!-- right arm on hip -->
+  <path d="M298 186 L314 226 L304 232 L294 208 Z" fill="#4F7DB8"/>
+  <path d="M314 224 L300 266 L290 262 L303 228 Z" fill="#3B6396"/>
+  <circle cx="294" cy="266" r="7" fill="#C68A5E"/>
+  <!-- neck -->
+  <path d="M260 158 H276 V182 Q268 188 260 182 Z" fill="#C68A5E"/>
+  <path d="M262 180 Q268 188 274 180" fill="none" stroke="#E8C66A" stroke-width="1.5"/>
+  <!-- face -->
+  <path d="M249 118 Q249 96 268 96 Q287 96 287 118 L287 136 Q285 160 268 163 Q251 160 249 136 Z" fill="#C68A5E"/>
+  <path d="M287 118 L287 136 Q285 160 268 163 Q282 150 283 118 Z" fill="#A56D45" stroke="none"/>
+  <!-- hair front -->
+  <path d="M246 116 Q244 96 268 93 Q292 96 290 116 L292 158 L285 156 L285 118 Q276 108 268 106 Q260 108 251 118 L251 156 L244 158 Z" fill="#15101A"/>
+  <!-- sunglasses -->
+  <path d="M252 117 h13 q2 0 2 3 v3 q-1 7 -8 7 q-7 0 -8 -7 v-3 q0 -3 1 -3 Z" fill="#1A0B2E"/>
+  <path d="M271 117 h13 q1 0 1 3 v3 q-1 7 -8 7 q-7 0 -8 -7 v-3 q0 -3 2 -3 Z" fill="#1A0B2E"/>
+  <path d="M267 120 h4" fill="none" stroke-width="2.5"/>
+  <path d="M255 120 l4 0 M274 120 l4 0" stroke="#FF3D7F" stroke-width="2"/>
+  <!-- nose & smile -->
+  <path d="M268 130 Q266 137 270 138" fill="none" stroke-width="2"/>
+  <path d="M259 145 Q268 155 278 145 Z" fill="#FFFFFF" stroke-width="2.5"/>
+  <!-- hat brown -->
+  <path d="M227 106 Q268 117 311 103 Q316 95 305 95 Q268 104 236 95 Q223 96 227 106 Z" fill="#8B5A3C"/>
+  <path d="M247 100 Q244 72 261 66 Q269 72 277 66 Q293 72 291 100 Q268 104 247 100 Z" fill="#8B5A3C"/>
+  <path d="M248 92 Q268 97 290 92 L291 100 Q268 104 247 100 Z" fill="#5A3520"/>
+  <path d="M277 66 Q293 72 291 100 Q284 101 282 101 Q285 78 277 66 Z" fill="#6B4229" stroke="none"/>
+
+  <!-- ================= MIKE (malinois) ================= -->
+  <g transform="translate(22 0)">
+    <path d="M356 412 Q382 424 390 396 Q388 420 360 426 Z" fill="#C9934E"/>
+    <path d="M316 336 Q342 328 358 360 Q374 394 362 426 L318 428 Q306 382 316 336 Z" fill="#C9934E"/>
+    <path d="M358 360 Q374 394 362 426 L346 427 Q366 396 352 352 Z" fill="#A9763A" stroke="none"/>
+    <ellipse cx="348" cy="402" rx="16" ry="20" fill="#B9843F"/>
+    <path d="M314 378 L312 424 Q312 430 320 430 H328 L327 380 Z" fill="#D9A563"/>
+    <path d="M327 384 L327 426 Q328 430 334 430 H340 L338 386 Z" fill="#B9843F"/>
+    <path d="M304 318 Q312 342 318 344 L340 338 Q338 318 330 314 Z" fill="#C9934E"/>
+    <path d="M308 332 L334 326 L336 334 L310 340 Z" fill="#FF3D7F"/>
+    <circle cx="322" cy="342" r="3.5" fill="#FFD166" stroke-width="2"/>
+    <path d="M304 296 Q322 286 336 300 Q340 318 328 326 L312 330 Q304 326 300 320 Z" fill="#C9934E"/>
+    <path d="M312 296 L314 268 L328 294 Z" fill="#C9934E"/>
+    <path d="M314 270 L314 284 L322 284 Z" fill="#2A1A12" stroke="none"/>
+    <path d="M324 298 L336 272 L340 302 Z" fill="#B9843F"/>
+    <path d="M336 274 L332 288 L339 290 Z" fill="#2A1A12" stroke="none"/>
+    <path d="M306 304 L284 312 Q278 318 284 324 L304 328 Q310 318 306 304 Z" fill="#2A1A12"/>
+    <path d="M306 300 Q314 296 318 304 L312 312 Z" fill="#2A1A12" stroke="none"/>
+    <circle cx="283" cy="315" r="3.2" fill="#1A0B2E"/>
+    <circle cx="313" cy="305" r="2.6" fill="#FDF2FF" stroke="none"/>
+    <circle cx="313" cy="305" r="1.4" fill="#1A0B2E" stroke="none"/>
+    <path d="M290 324 Q296 330 302 326" fill="none" stroke-width="2"/>
+    <path d="M292 326 Q294 336 300 330" fill="#FF6F9A" stroke-width="2"/>
+  </g>
+
+  <!-- ================= JOSEP (front, left) ================= -->
+  <!-- jeans -->
+  <path d="M106 282 H174 L178 412 H148 L141 318 L134 412 H102 Z" fill="#8E3B3E"/>
+  <path d="M141 318 L148 410 H160 Z" fill="#6E2B2F" stroke="none"/>
+  <!-- shoes -->
+  <path d="M106 396 H134 L136 412 Q142 413 142 420 V428 H92 V422 Q92 413 104 412 Z" fill="#7A5038"/>
+  <path d="M148 396 H176 L178 412 Q190 413 190 422 V428 H146 L148 412 Z" fill="#7A5038"/>
+  <path d="M92 424 H142 M146 424 H190 M114 401 h12 M114 407 h12 M156 401 h12 M156 407 h12" fill="none" stroke-width="2.5"/>
+  <!-- tee -->
+  <path d="M96 178 Q140 165 184 178 L196 232 L180 238 L178 290 H102 L100 238 L84 232 Z" fill="#6E7F5A"/>
+  <path d="M184 178 L196 232 L180 238 L178 290 H160 Q178 240 184 178 Z" fill="#55644A" stroke="none"/><path d="M103 282 H177" fill="none" stroke-width="2" stroke="#3F4B36"/><path d="M140 176 V196 M136 184 h0.1 M136 191 h0.1" fill="none" stroke-width="2.5"/>
+  <path d="M126 172 Q140 184 154 172" fill="none" stroke-width="2.5"/>
+  <!-- brown jacket -->
+  <path d="M96 178 Q108 173 121 175 L127 212 L119 293 H99 L100 238 L84 232 Z" fill="#7B5236"/>
+  <path d="M184 178 Q172 173 159 175 L153 212 L161 293 H181 L180 238 L196 232 Z" fill="#62402A"/>
+  <path d="M121 175 L130 206 L115 198 Z" fill="#5A3A26"/>
+  <path d="M159 175 L150 206 L165 198 Z" fill="#4A2F1F"/>
+  <path d="M104 276 h12 M164 276 h12" fill="none" stroke-width="2"/>
+  <!-- upper arms -->
+  <path d="M88 230 L100 234 L106 262 L92 266 Z" fill="#7B5236"/>
+  <path d="M192 230 L180 234 L174 262 L188 266 Z" fill="#62402A"/>
+  <!-- crossed forearms -->
+  <path d="M92 252 Q140 246 188 252 Q192 262 188 270 Q140 264 92 270 Q86 262 92 252 Z" fill="#6A4630"/>
+  <path d="M100 236 Q140 232 166 236 L166 254 Q140 248 102 252 Q94 244 100 236 Z" fill="#7B5236"/>
+  <path d="M166 236 Q182 236 182 246 Q182 256 166 254 Z" fill="#E8B48A"/>
+  <path d="M110 242 Q130 240 150 243 M108 260 Q140 256 176 260" fill="none" stroke="#4A2F1F" stroke-width="2"/>
+  <!-- neck -->
+  <path d="M127 150 H153 V176 Q140 182 127 176 Z" fill="#E8B48A"/>
+  <!-- ears -->
+  <ellipse cx="111" cy="120" rx="6" ry="10" fill="#E8B48A"/>
+  <ellipse cx="169" cy="120" rx="6" ry="10" fill="#C98E66"/>
+  <!-- head -->
+  <path d="M112 102 Q112 72 140 72 Q168 72 168 102 L168 128 Q166 158 140 162 Q114 158 112 128 Z" fill="#E8B48A"/>
+  <path d="M168 102 L168 128 Q166 158 140 162 Q162 146 163 102 Z" fill="#C98E66" stroke="none"/>
+  <path d="M113 100 Q140 110 167 100 L167 108 Q140 116 113 108 Z" fill="#1A0B2E" opacity=".18" stroke="none"/>
+  <!-- beard -->
+  <path d="M113 122 Q115 162 140 165 Q165 162 167 122 L162 124 Q161 146 152 148 Q140 141 128 148 Q119 146 118 124 Z" fill="#3A2A22"/>
+  <path d="M129 139 Q140 135 151 139 Q140 142 129 139 Z" fill="#3A2A22" stroke-width="2"/>
+  <path d="M132 147 Q141 150 150 144" fill="none" stroke="#E8B48A" stroke-width="2.5"/>
+  <!-- eyes -->
+  <path d="M122 118 Q128 113 134 118 Q128 122 122 118 Z" fill="#FFFFFF" stroke-width="2"/>
+  <path d="M146 119 Q152 115 158 119 Q152 122 146 119 Z" fill="#FFFFFF" stroke-width="2"/>
+  <circle cx="129" cy="118" r="2.2" fill="#1A0B2E" stroke="none"/>
+  <circle cx="153" cy="119" r="2.2" fill="#1A0B2E" stroke="none"/>
+  <!-- brows: one up, one down -->
+  <path d="M119 107 Q127 99 136 106" fill="none" stroke-width="4"/>
+  <path d="M145 112 L161 110" fill="none" stroke-width="4"/>
+  <!-- nose -->
+  <path d="M141 119 L137 132 Q140 135 145 132" fill="none" stroke-width="2.5"/>
+  <!-- white hat -->
+  <path d="M82 90 Q96 106 140 106 Q184 106 198 90 Q203 76 191 70 Q188 92 140 92 Q92 92 89 70 Q77 76 82 90 Z" fill="#5A3E2E"/>
+  <path d="M110 93 Q105 54 124 44 Q140 53 156 44 Q175 54 170 93 Q140 97 110 93 Z" fill="#5A3E2E"/>
+  <path d="M111 84 Q140 90 169 84 L170 93 Q140 97 110 93 Z" fill="#2E1F17"/>
+  <path d="M156 44 Q175 54 170 93 L163 94 Q168 62 156 44 Z" fill="#432E22" stroke="none"/>
+  <path d="M191 70 Q188 92 140 92 L140 99 Q188 100 196 82 Z" fill="#432E22" stroke="none"/>
+</g>
+</svg>
+    <span class="tag t1 display">THE GAMER</span>
+    <span class="tag t2 display">THE BOSS</span>
+    <span class="tag t3 display">MIKE · WALKED ✓</span>
+  </div>
+  <div class="bar"><i id="barFill"></i></div>
+  <p class="tip" id="tip"></p>
+  <button class="start" id="start">PRESS TO START</button>
+</div>
+
+<!-- ============ HUD ============ -->
+<header class="hud">
+  <div class="left">
+    <div class="stars" id="stars" aria-label="Wanted level 0"><i>★</i><i>★</i><i>★</i><i>★</i><i>★</i></div>
+    <div class="stars-label" id="starsLabel">WANTED LEVEL: 0 · NO CHORES TODAY</div>
+  </div>
+  <div class="right">
+    <div class="clock display" id="clock">--:--</div>
+    <div class="cash display" id="cash">$0</div>
+  </div>
+  <div class="countdown" id="countdown" aria-live="off">
+    <span class="cd-label">⏱ PLAYER 2 · THE BOSS RETURNS IN</span>
+    <span class="cd-time display" id="cdTime">--:--:--</span>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<div class="scene hero">
+  <div class="sun"></div>
+  <svg class="palm l" viewBox="0 0 200 300" aria-hidden="true"><path d="M96 300 C 100 230, 112 170, 118 112 L 126 112 C 122 170, 112 230, 112 300 Z"/><path d="M122 110 C 90 80, 40 82, 4 112 C 44 96, 84 98, 122 116 Z"/><path d="M122 110 C 100 66, 60 48, 18 54 C 62 66, 96 84, 120 116 Z"/><path d="M122 110 C 130 64, 160 38, 196 34 C 166 54, 142 80, 126 116 Z"/><path d="M122 110 C 160 92, 190 104, 200 136 C 178 116, 152 110, 124 116 Z"/></svg>
+  <svg class="palm r" viewBox="0 0 200 300" aria-hidden="true"><path d="M96 300 C 100 230, 112 170, 118 112 L 126 112 C 122 170, 112 230, 112 300 Z"/><path d="M122 110 C 90 80, 40 82, 4 112 C 44 96, 84 98, 122 116 Z"/><path d="M122 110 C 100 66, 60 48, 18 54 C 62 66, 96 84, 120 116 Z"/><path d="M122 110 C 130 64, 160 38, 196 34 C 166 54, 142 80, 126 116 Z"/></svg>
+  <h2 class="display">IT’S FINALLY<br>RELEASE DAY</h2>
+  <p>The wait is over. The whole day is yours, player one.</p>
+  <div class="art hero-art" id="heroArt"></div>
+</div>
+
+<main>
+  <!-- Phone -->
+  <div class="phone">
+    <div class="top">
+      <img class="avatar" src="data:image/jpeg;base64,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" alt="Iya">
+      <div>
+        <div class="who">Iya ❤️</div>
+        <div class="status" id="status">online</div>
+      </div>
+    </div>
+    <div class="thread" id="thread" aria-live="polite"></div>
+  </div>
+
+  <!-- Co-op -->
+  <section>
+    <div class="label"><h3 class="display">CO-OP BONUS</h3><span>Covered by Player 2</span></div>
+    <article class="mission coop" style="--accent:#7CFF9B">
+      <span class="stamp display">HANDLED BY IYA</span>
+      <div class="head">
+        <div class="icon" data-icon="mike"></div>
+        <div><div class="kicker">MISSION 0 · ALL MORNING</div><h4>Mike’s Patrols</h4></div>
+      </div>
+      <p class="brief">Your usual mission? Not today. I’ve got Mike covered, so he’s walked, happy and probably napping. You can go straight to the couch.</p>
+      <ul class="patrols">
+        <li class="patrol done"><span class="pdot">✓</span><span class="pt">Morning walk</span><span class="ps">Done</span></li>
+        <li class="patrol" id="midday"><span class="pdot">🐾</span><span class="pt">Midday walk · 11–12h</span><span class="ps" id="middayStatus">Iya’s on it</span></li>
+      </ul>
+      <div class="meta"><span class="chip">✅ Covered by Iya</span><span class="chip">🐾 Mike approved</span><span class="chip">💵 +$1,000 bonus</span></div>
+    </article>
+  </section>
+
+  <!-- Main missions -->
+  <section>
+    <div class="label"><h3 class="display">MAIN MISSIONS</h3><span>Catering by me</span></div>
+    <div class="missions" id="missions"></div>
+  </section>
+
+  <!-- Side missions -->
+  <section>
+    <div class="label"><h3 class="display">SIDE MISSIONS</h3><span>Optional, but recommended</span></div>
+    <div class="sides" id="sides"></div>
+  </section>
+
+  <!-- Hidden package -->
+  <section>
+    <div class="label"><h3 class="display">HIDDEN PACKAGE</h3><span>1 of 1 · Bonus</span></div>
+    <article class="mission secret" id="letterCard" style="--accent:#FFD166">
+      <div class="head">
+        <div class="icon" data-icon="letter"></div>
+        <div><div class="kicker">COLLECTIBLE · ANYTIME</div><h4>The Lost Letter</h4></div>
+      </div>
+      <p class="brief">There’s a handwritten letter with your name on it hidden somewhere in the house. No map marker for this one, just a clue:</p>
+      <p class="riddle">“It keeps your head safe on every ride, but today it’s guarding something inside.”</p>
+      <p class="brief small">Still stuck? Text me “hot or cold” 😉</p>
+      <div class="meta"><span class="chip">✉️ Handwritten by Iya</span><span class="chip">📍 Location: classified</span><span class="chip">💵 +$5,000 bonus</span></div>
+      <button class="go" id="letterBtn">I found it</button>
+    </article>
+  </section>
+
+  <!-- Progress -->
+  <section>
+    <div class="label"><h3 class="display">GAME COMPLETION</h3></div>
+    <div class="progress">
+      <div class="track"><div class="fill" id="fill"></div></div>
+      <div class="pct display" id="pct">0%</div>
+    </div>
+    <div class="prize-locked" id="prizeLocked">
+      <span class="lock">🔒</span>
+      <div><div class="pl-k">GRAND PRIZE</div><div class="pl-t">Reach 100% to unlock</div></div>
+    </div>
+    <div class="finale" id="finale">
+      <h3 class="display">100% COMPLETE</h3>
+      <div class="prize-emoji">💆‍♂️</div>
+      <p class="prize-name display">GRAND PRIZE: 30-MINUTE MASSAGE</p>
+      <p>Fed, ridden and fully levelled up. What a lucky man. Redeemable tonight from The Boss herself ❤️</p>
+    </div>
+  </section>
+
+  <!-- Cheats -->
+  <section>
+    <div class="label"><h3 class="display">CHEAT CODES</h3><span>Hint: the truth about me 😏</span></div>
+    <form class="cheat" id="cheatForm" autocomplete="off">
+      <input id="cheatInput" type="text" placeholder="ENTER CODE" aria-label="Cheat code" maxlength="20" autocapitalize="characters" spellcheck="false">
+      <button type="submit">ENTER</button>
+    </form>
+    <p class="cheat-out" id="cheatOut" aria-live="polite"></p>
+    <div class="voucher" id="voucher">
+      <div class="v-k">CHEAT REWARD · NO EXPIRY</div>
+      <div class="v-t display">FULL BODY MASSAGE CREDIT</div>
+      <div class="v-s">Valid for one full body massage from Iya. Redeem anytime, no questions asked ❤️</div>
+    </div>
+  </section>
+</main>
+
+<footer id="footer">Planned with love, long before you asked 🌴</footer>
+
+<!-- Mission passed overlay -->
+<div id="passed" role="alertdialog" aria-live="assertive">
+  <div>
+    <p class="big display">MISSION<br>PASSED</p>
+    <p class="sub display" id="passedSub"></p>
+    <p class="note" id="passedNote"></p>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ================= EDIT ME =================
+  const MESSAGES = [
+    "Buenos días, gamer 🎮",
+    "Today’s the day. You’ve waited forever for this one.",
+    "I’m out all day with the girls, workout then work, so the house is all yours.",
+    "Mike’s already walked 🐕 and I’ll take him out again around 11–12 before I leave.",
+    "Food is sorted too. I planned everything before you even asked 😏 Tonight it’s poke bowls for both of us when I’m home at 9 🥗",
+    "Finish every mission and there’s a grand prize waiting… and there’s something hidden in the house 👀",
+    "Your missions are below. Go play. Te quiero ❤️"
+  ];
+
+  const ICONS = {
+    breakfast: `<svg viewBox="0 0 52 52" aria-hidden="true"><g stroke="#1A0B2E" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"><path d="M5 18 Q5 7 16 8 Q22 4 28 8 Q39 7 39 18 Q39 22 36 23 V42 H8 V23 Q5 22 5 18 Z" fill="#C98B45"/><path d="M11 20 Q10 13 17 13 Q22 10 27 13 Q34 13 33 20 V38 H11 Z" fill="#F2C783" stroke="none"/><path d="M13 28 Q11 19 21 19 Q31 17 32 25 Q34 35 22 35 Q13 35 13 28 Z" fill="#FDF2FF"/><circle cx="22" cy="27" r="5" fill="#FFC23A"/><circle cx="20.5" cy="25.5" r="1.3" fill="#FFF3C4" stroke="none"/><circle cx="40" cy="38" r="9.5" fill="#7A5A32"/><circle cx="40" cy="38" r="7.5" fill="#9BD150" stroke="none"/><circle cx="40" cy="38" r="2.6" fill="#F4F1C9" stroke="none"/><circle cx="44.6" cy="38.0" r=".9" fill="#1A0B2E" stroke="none"/><circle cx="43.3" cy="41.3" r=".9" fill="#1A0B2E" stroke="none"/><circle cx="40.0" cy="42.6" r=".9" fill="#1A0B2E" stroke="none"/><circle cx="36.7" cy="41.3" r=".9" fill="#1A0B2E" stroke="none"/><circle cx="35.4" cy="38.0" r=".9" fill="#1A0B2E" stroke="none"/><circle cx="36.7" cy="34.7" r=".9" fill="#1A0B2E" stroke="none"/><circle cx="40.0" cy="33.4" r=".9" fill="#1A0B2E" stroke="none"/><circle cx="43.3" cy="34.7" r=".9" fill="#1A0B2E" stroke="none"/></g></svg>`,
+    lunch: `<svg viewBox="0 0 52 52" aria-hidden="true"><g stroke="#1A0B2E" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"><path d="M33 22 L37 6 M31 8 L29 15 M35 9 L33 16 M39 10 L37 17 M29 15 Q33 20 37 17" fill="none" stroke="#FDF2FF"/><path d="M11 28 Q13 14 26 14 Q39 14 41 28 Z" fill="#FFD166"/><path d="M16 25 q4 -6 8 0 q4 6 8 0 M20 19 q3 -3 6 0" fill="none" stroke-width="2" stroke="#C99A2E"/><circle cx="31" cy="20" r="4" fill="#E4572E"/><path d="M6 28 H46 Q46 44 26 44 Q6 44 6 28 Z" fill="#FF3D7F"/><path d="M46 28 Q46 44 26 44 Q40 38 41 28 Z" fill="#D62E66" stroke="none"/></g></svg>`,
+    ride: `<svg viewBox="0 0 52 52" aria-hidden="true"><g stroke="#1A0B2E" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"><circle cx="13" cy="34" r="9" fill="#2B1048"/><circle cx="39" cy="34" r="9" fill="#2B1048"/><circle cx="13" cy="34" r="2" fill="#FDF2FF"/><circle cx="39" cy="34" r="2" fill="#FDF2FF"/><path d="M13 34 L21 21 H36 L39 34 M21 21 L27 34 L36 21" fill="none" stroke="#FF9A3C" stroke-width="3.5"/><path d="M21 21 L20 16 M16 15 H24 M36 21 L35 13 L41 12" fill="none" stroke-width="3"/><path d="M4 12 H11 M2 18 H8" fill="none" stroke="#FDF2FF" stroke-width="2"/></g></svg>`,
+    snack: `<svg viewBox="0 0 52 52" aria-hidden="true"><g stroke="#1A0B2E" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" transform="rotate(-28 26 26)"><rect x="5" y="16" width="38" height="20" rx="10" fill="#F2D19B"/><path d="M13 17 q3 9 0 18 M21 16 q3 10 0 20" fill="none" stroke-width="2" stroke="#C9A36A"/><ellipse cx="40" cy="26" rx="6" ry="10" fill="#8BC34A"/><circle cx="39" cy="22" r="2.2" fill="#E4572E" stroke="none"/><circle cx="41" cy="29" r="2.2" fill="#FFD166" stroke="none"/><circle cx="38" cy="27" r="1.6" fill="#FDF2FF" stroke="none"/></g></svg>`,
+    mike: `<svg viewBox="0 0 52 52" aria-hidden="true"><g stroke="#1A0B2E" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"><path d="M13 22 L11 4 L24 15 Z" fill="#C9934E"/><path d="M39 22 L41 4 L28 15 Z" fill="#B9843F"/><path d="M11 4 L13 13 L18 10 Z M41 4 L39 13 L34 10 Z" fill="#2A1A12" stroke="none"/><path d="M17 40 Q26 46 35 40 L35 44 Q26 50 17 44 Z" fill="#FF3D7F"/><path d="M13 22 Q13 11 26 11 Q39 11 39 22 L37 34 Q26 45 15 34 Z" fill="#C9934E"/><path d="M19 29 Q26 25 33 29 Q33 39 26 41 Q19 39 19 29 Z" fill="#2A1A12"/><ellipse cx="26" cy="30" rx="3.5" ry="2.4" fill="#000"/><circle cx="25" cy="29.4" r=".9" fill="#FDF2FF" stroke="none"/><circle cx="19.5" cy="22" r="2.2" fill="#1A0B2E" stroke="none"/><circle cx="32.5" cy="22" r="2.2" fill="#1A0B2E" stroke="none"/><circle cx="20.2" cy="21.3" r=".7" fill="#FDF2FF" stroke="none"/><circle cx="33.2" cy="21.3" r=".7" fill="#FDF2FF" stroke="none"/></g></svg>`,
+    letter: `<svg viewBox="0 0 52 52" aria-hidden="true"><g stroke="#1A0B2E" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"><path d="M6 15 H44 V40 H6 Z" fill="#FDF2FF"/><path d="M6 40 L20 27 M44 40 L30 27" fill="none" stroke-width="2"/><path d="M6 15 L25 30 L44 15" fill="#E9DDF2"/><path d="M25 35 q-6 -4 -6 -8 q0 -3 3 -3 q2 0 3 2 q1 -2 3 -2 q3 0 3 3 q0 4 -6 8 Z" fill="#FF3D7F" stroke-width="1.8"/><path d="M44 3 l1.6 4.4 l4.4 1.6 l-4.4 1.6 l-1.6 4.4 l-1.6 -4.4 l-4.4 -1.6 l4.4 -1.6 Z" fill="#FFD166" stroke-width="1.8"/></g></svg>`
+  };
+
+  const MISSIONS = [
+    { id: "breakfast", icon: ICONS.breakfast, due: "11:00", late: "SKIPPED BREAKFAST? 👀", accent: "#FFD166", kicker: "MISSION 1 · WHEN YOU WAKE UP",
+      title: "The Breakfast Job",
+      brief: "Poached egg on toast with kiwi on the side, made by me this morning. Eat it while it’s warm, before you pick up the controller. That’s an order.",
+      chips: ["🍳 Poached egg toast", "🥝 Kiwi", "📍 Kitchen"], reward: 1000,
+      note: "Egg secured, kiwi acquired. Now go start that game." },
+    { id: "lunch", icon: ICONS.lunch, due: "15:00", late: "NO LUNCH YET? 🍝", accent: "#FF3D7F", kicker: "MISSION 2 · AROUND LUNCHTIME",
+      title: "The Pasta Heist",
+      brief: "Homemade pasta in the fridge. Microwave it for 2 to 3 minutes, stir halfway, and add cheese like you mean it. Pause the game, you deserve a real break.",
+      chips: ["⏱ Lunchtime", "📍 Fridge", "🔥 2–3 min"], reward: 2500,
+      note: "Pasta secured. Clean getaway." },
+    { id: "ride", icon: ICONS.ride, due: "18:30", late: "THE BIKE MISSES YOU 🚴", accent: "#FF9A3C", kicker: "MISSION 3 · AFTERNOON",
+      title: "The Spin Cycle",
+      brief: "Pause the game, hop on the bike trainer and ride for 30 minutes. Easy pace is fine, just get the legs moving. Then the burrito is yours.",
+      chips: ["⏱ 30 min", "📍 Bike trainer", "💧 Bring water"], reward: 3000, btn: "Mark as ridden",
+      note: "Legs pumped. You’ve earned that burrito." },
+    { id: "snack", icon: ICONS.snack, due: "20:00", late: "BURRITO WAITING 🌯", accent: "#2EE6D6", kicker: "MISSION 4 · AFTER THE RIDE",
+      title: "Burrito Drop",
+      brief: "Your post-ride reward is stashed in the fridge. Microwave 1 to 2 minutes, or warm it in a pan if you want it crispy.",
+      chips: ["⏱ Afternoon", "📍 Fridge", "🔥 1–2 min"], reward: 1500,
+      needs: "ride", failMsg: "Nice try. The burrito is locked until you finish the ride 😏🚴‍♂️",
+      note: "Burrito acquired. Back to the streets." }
+  ];
+
+  const SIDES = [
+    { id: "water",   text: "Drink a glass of water every couple of hours 💧" },
+    { id: "stretch", text: "Stand up and stretch between missions 🧍" },
+    { id: "photo",   text: "Send me a screenshot of your best moment 📸" },
+    { id: "kiss",    text: "Save one kiss for when I get home 😘" }
+  ];
+
+  // The one real cheat code. Typed with or without spaces, any case.
+  const CHEAT_CODES = ["IYAISTHEBEST", "IYAESLAMEJOR"];
+
+  const TIPS = [
+    "Tip: Your mujer, the best in the world, planned all of this before you even asked.",
+    "Tip: Eating breakfast restores full health.",
+    "Tip: Chores have been disabled for today.",
+    "Tip: Mike’s walks are covered today. Your co-op partner has your back.",
+    "Tip: Pasta and burrito are hidden in the fridge.",
+    "Tip: Reach 100% completion to unlock the grand prize.",
+    "Tip: Poke bowls arrive at 9pm. Save some room after the burrito.",
+    "Tip: There’s a hidden package somewhere in the house.",
+    "Tip: Remember to blink occasionally."
+  ];
+  // ===========================================
+
+  const KEY = "josep-gta-day-v1";
+  const $ = id => document.getElementById(id);
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } };
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} };
+  let state = Object.assign({ missions: [], sides: [], seenIntro: false, letter: false, cheat: false }, load());
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---------- Loading ----------
+  let tipIdx = 0;
+  const tipEl = $("tip");
+  tipEl.textContent = TIPS[0];
+  const tipTimer = setInterval(() => { tipIdx = (tipIdx + 1) % TIPS.length; tipEl.textContent = TIPS[tipIdx]; }, 2200);
+
+  const duration = state.seenIntro ? 900 : 4200;
+  const t0 = performance.now();
+  (function grow(now) {
+    const p = Math.min(1, (now - t0) / duration);
+    $("barFill").style.width = (p * 100) + "%";
+    if (p < 1) requestAnimationFrame(grow);
+    else $("start").classList.add("ready");
+  })(t0);
+
+  $("start").addEventListener("click", () => {
+    clearInterval(tipTimer);
+    $("loading").classList.add("gone");
+    playThread();
+  });
+
+  // ---------- HUD ----------
+  function tick() {
+    const d = new Date();
+    if (d.getHours() >= 12) {
+      const m = $("midday");
+      if (m && !m.classList.contains("done")) { m.classList.add("done"); m.querySelector(".pdot").textContent = "✓"; $("middayStatus").textContent = "Done"; }
+    }
+    $("clock").textContent = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+    if (document.querySelector(".mission[data-id]")) updateWanted();
+  }
+  tick(); setInterval(tick, 15000);
+
+  const RETURN_HOUR = 21; // 9pm
+  function countdown() {
+    const now = new Date();
+    const target = new Date(now); target.setHours(RETURN_HOUR, 0, 0, 0);
+    const box = $("countdown");
+    let ms = target - now;
+    if (ms <= 0) {
+      box.classList.add("home");
+      box.querySelector(".cd-label").textContent = "❤️ PLAYER 2 HAS ENTERED THE GAME";
+      $("cdTime").textContent = "THE BOSS IS HOME 🥗";
+      return;
+    }
+    const s = Math.floor(ms / 1000);
+    const hh = Math.floor(s / 3600), mm = Math.floor(s % 3600 / 60), ss = s % 60;
+    $("cdTime").textContent = `${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}:${String(ss).padStart(2,"0")}`;
+  }
+  countdown(); setInterval(countdown, 1000);
+
+  let shownCash = 0, cashRun = 0;
+  function cashTotal() { return MISSIONS.filter(m => state.missions.includes(m.id)).reduce((a, m) => a + m.reward, 0) + state.sides.length * 250 + 1000 + (state.letter ? 5000 : 0); }
+  function animateCash() {
+    const target = cashTotal();
+    const from = shownCash, t = performance.now(), run = ++cashRun;
+    (function step(now) {
+      if (run !== cashRun) return;
+      const p = reduce ? 1 : Math.max(0, Math.min(1, (now - t) / 900));
+      shownCash = Math.round(from + (target - from) * p);
+      $("cash").textContent = "$" + shownCash.toLocaleString("en-US");
+      if (p < 1) requestAnimationFrame(step);
+    })(t);
+  }
+
+  // ---------- Thread ----------
+  const thread = $("thread");
+  function bubble(text) {
+    const b = document.createElement("div");
+    b.className = "msg"; b.textContent = text;
+    thread.appendChild(b);
+  }
+  function playThread() {
+    if (state.seenIntro || reduce) { MESSAGES.forEach(bubble); return; }
+    let i = 0;
+    const next = () => {
+      if (i >= MESSAGES.length) { $("status").textContent = "online"; state.seenIntro = true; save(); return; }
+      $("status").textContent = "typing…";
+      const t = document.createElement("div");
+      t.className = "msg typing"; t.innerHTML = "<i></i><i></i><i></i>";
+      thread.appendChild(t);
+      setTimeout(() => {
+        t.remove(); bubble(MESSAGES[i++]);
+        setTimeout(next, 500);
+      }, 900 + Math.min(1400, MESSAGES[i].length * 18));
+    };
+    setTimeout(next, 400);
+  }
+
+  // ---------- Missions ----------
+  function renderMissions() {
+    const wrap = $("missions"); wrap.innerHTML = "";
+    MISSIONS.forEach(m => {
+      const done = state.missions.includes(m.id);
+      const el = document.createElement("article");
+      el.className = "mission" + (done ? " done" : "");
+      el.dataset.id = m.id;
+      el.style.setProperty("--accent", m.accent);
+      el.innerHTML = `
+        <div class="head">
+          <div class="icon">${m.icon}</div>
+          <div><div class="kicker">${m.kicker}</div><h4>${m.title}</h4></div>
+        </div>
+        <p class="brief">${m.brief}</p>
+        <div class="meta">${m.chips.map(c => `<span class="chip">${c}</span>`).join("")}<span class="chip">💵 +$${m.reward.toLocaleString("en-US")}</span></div>
+        <button class="go">${done ? "Completed ✓ (tap to undo)" : (m.btn || "Mark as eaten")}</button>`;
+      el.querySelector(".go").addEventListener("click", () => {
+        if (done) { state.missions = state.missions.filter(x => x !== m.id); }
+        else if (m.needs && !state.missions.includes(m.needs)) { showFailed(m.failMsg); return; }
+        else { state.missions.push(m.id); showPassed(m); }
+        save(); renderMissions(); updateProgress();
+      });
+      wrap.appendChild(el);
+    });
+  }
+
+  function renderSides() {
+    const wrap = $("sides"); wrap.innerHTML = "";
+    SIDES.forEach(s => {
+      const on = state.sides.includes(s.id);
+      const b = document.createElement("button");
+      b.className = "side"; b.setAttribute("aria-pressed", on);
+      b.innerHTML = `<span class="box">${on ? "✓" : ""}</span><span class="txt">${s.text}</span><span class="chip">+$250</span>`;
+      b.addEventListener("click", () => {
+        state.sides = on ? state.sides.filter(x => x !== s.id) : [...state.sides, s.id];
+        save(); renderSides(); updateProgress();
+      });
+      wrap.appendChild(b);
+    });
+  }
+
+  function updateWanted() {
+    const d = new Date(), now = d.getHours() * 60 + d.getMinutes();
+    const mins = t => { const [a, b] = t.split(":").map(Number); return a * 60 + b; };
+    const overdue = MISSIONS.filter(m => m.due && !state.missions.includes(m.id) && now >= mins(m.due));
+    const n = Math.min(5, overdue.length);
+    const stars = $("stars");
+    stars.querySelectorAll("i").forEach((s, i) => s.classList.toggle("on", i < n));
+    stars.classList.toggle("hot", n > 0);
+    stars.setAttribute("aria-label", "Wanted level " + n);
+    const label = $("starsLabel");
+    label.textContent = n ? `WANTED LEVEL: ${n} · ${overdue[overdue.length - 1].late}` : "WANTED LEVEL: 0 · NO CHORES TODAY";
+    label.classList.toggle("wanted", n > 0);
+    document.querySelectorAll(".mission[data-id]").forEach(el => el.classList.toggle("late", overdue.some(m => m.id === el.dataset.id)));
+  }
+
+  function updateProgress() {
+    const total = MISSIONS.length * 2 + SIDES.length;
+    const got = state.missions.length * 2 + state.sides.length;
+    const pct = Math.round(got / total * 100);
+    $("fill").style.width = pct + "%";
+    $("pct").textContent = pct + "%";
+    $("finale").classList.toggle("show", pct === 100);
+    $("prizeLocked").style.display = pct === 100 ? "none" : "flex";
+    updateWanted();
+    animateCash();
+  }
+
+  // ---------- Mission passed ----------
+  let passedTimer;
+  function showOverlay(title, sub, note, failed, ms) {
+    const o = $("passed");
+    o.classList.toggle("failed", !!failed);
+    o.querySelector(".big").innerHTML = title;
+    $("passedSub").textContent = sub;
+    $("passedNote").textContent = note;
+    o.classList.remove("show"); void o.offsetWidth; o.classList.add("show");
+    clearTimeout(passedTimer);
+    passedTimer = setTimeout(() => o.classList.remove("show"), ms || 2800);
+  }
+  const showFailed = msg => showOverlay("MISSION<br>FAILED", "+$0", msg, true, 3200);
+  const showPassed = m => showOverlay("MISSION<br>PASSED", "+$" + m.reward.toLocaleString("en-US"), m.note);
+
+  function renderLetter() {
+    const card = $("letterCard"), btn = $("letterBtn");
+    card.classList.toggle("done", state.letter);
+    btn.textContent = state.letter ? "Found ✓ (tap to undo)" : "I found it";
+  }
+  $("letterBtn").addEventListener("click", () => {
+    state.letter = !state.letter; save(); renderLetter(); animateCash();
+    if (state.letter) showOverlay("COLLECTIBLE<br>FOUND", "+$5,000", "Now go read it. Slowly. ❤️", false, 3600);
+  });
+  $("passed").addEventListener("click", () => $("passed").classList.remove("show"));
+
+  // ---------- Cheats ----------
+  $("cheatForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const code = $("cheatInput").value.trim().toUpperCase().replace(/[^A-Z]/g, "");
+    const out = $("cheatOut");
+    if (CHEAT_CODES.includes(code)) {
+      out.textContent = "Correct. Iya is, in fact, the best.";
+      out.className = "cheat-out win";
+      if (!state.cheat) { state.cheat = true; save(); }
+      renderCheat();
+      showOverlay("CHEAT<br>ACTIVATED", "FULL BODY MASSAGE", "Credit unlocked. Redeem it anytime with The Boss ❤️", false, 3800);
+    } else {
+      out.textContent = code ? "Cheat not recognised. Try again, gamer." : "";
+      out.className = "cheat-out";
+    }
+    $("cheatInput").value = "";
+  });
+
+  function renderCheat() {
+    $("voucher").classList.toggle("show", !!state.cheat);
+  }
+
+  // Secret reset: double-tap the footer
+  $("footer").addEventListener("dblclick", () => { try { localStorage.removeItem(KEY); } catch {} location.reload(); });
+
+  // ---------- Init ----------
+  $("heroArt").innerHTML = document.querySelector("#loading .art").innerHTML;
+  document.querySelectorAll("[data-icon]").forEach(el => { el.innerHTML = ICONS[el.dataset.icon]; });
+  renderLetter();
+  renderCheat();
+  renderMissions();
+  renderSides();
+  updateProgress();
+})();
+</script>
+</body>
+</html>
